@@ -16,7 +16,7 @@ USER=accumulo
 # EMR at any point after creation so the password set during the initial spin-up would have
 # to be persisted somewhere and provided to the newly created nodes at some later date.
 USERPW=secret # TODO: Can't change until trace.password in accumulo-site.xml is updated
-ACCUMULO_VERSION=1.7.0
+ACCUMULO_VERSION=1.7.2
 ACCUMULO_TSERVER_OPTS=3GB
 INSTALL_DIR=/opt
 ACCUMULO_DOWNLOAD_BASE_URL=https://archive.apache.org/dist/accumulo
@@ -25,9 +25,12 @@ ACCUMULO_DOWNLOAD_BASE_URL=https://archive.apache.org/dist/accumulo
 GEOMESA_VERSION=${geomesa.release.version}
 GEOMESA_TARBALL="geomesa-dist-"${GEOMESA_VERSION}"-bin.tar.gz"
 # If this variable points to an s3 bucket/key, the tarball is grabbed from there (fast)
-GEOMESA_DIST_S3= #"s3://my-bucket/bootstrap/"${GEOMESA_TARBALL}
+GEOMESA_DIST_S3="s3://my-bucket/bootstrap/"${GEOMESA_TARBALL}
 #   Otherwise from the locationtech nexus (slow)
 GEOMESA_DIST_LT="https://repo.locationtech.org/content/repositories/geomesa-releases/org/locationtech/geomesa/geomesa-dist/"${GEOMESA_VERSION}"/"${GEOMESA_TARBALL}
+
+# Zookeeper shold be in EC2, EMR shold not choice
+ZOOKEEPER_HOST_LIST=localhost:2181
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -10,6 +10,7 @@
 ACCUMULO_INSTANCE=accumulo
 ACCUMULO_HOME="${INSTALL_DIR}/accumulo"
 MASTER_DNSNAME=
+ATTEMPTS=5
 INTIAL_POLLING_INTERVAL=15 # This gets doubled for each attempt up to max_attempts
 HDFS_USER=hdfs
 
@@ -25,8 +26,8 @@ is_master() {
 # Avoid race conditions and actually poll for availability of component dependencies
 # Credit: http://stackoverflow.com/questions/8350942/how-to-re-run-the-curl-command-automatically-when-the-error-occurs/8351489#8351489
 with_backoff() {
-  local max_attempts=${ATTEMPTS-5}
-  local timeout=${INTIAL_POLLING_INTERVAL-1}
+  local max_attempts=${ATTEMPTS}
+  local timeout=${INTIAL_POLLING_INTERVAL}
   local attempt=0
   local exitCode=0
 
@@ -93,10 +94,13 @@ configure_accumulo() {
 	# Requires zookeeper bootstrapped by EMR along with hadoop
 	MASTER_DNSNAME=$(hdfs getconf -confKey yarn.resourcemanager.hostname)
 	sudo cp $INSTALL_DIR/accumulo/conf/examples/${ACCUMULO_TSERVER_OPTS}/native-standalone/* $INSTALL_DIR/accumulo/conf/
-	sudo sed -i "s/<value>localhost:2181<\/value>/<value>${MASTER_DNSNAME}:2181<\/value>/" $INSTALL_DIR/accumulo/conf/accumulo-site.xml
+	sudo sed -i "s/<value>localhost:2181<\/value>/<value>${ZOOKEEPER_HOST_LIST}<\/value>/" $INSTALL_DIR/accumulo/conf/accumulo-site.xml
 	sudo sed -i '/HDP 2.0 requirements/d' $INSTALL_DIR/accumulo/conf/accumulo-site.xml
 	sudo sed -i "s/\${LOG4J_JAR}/\${LOG4J_JAR}:\/usr\/lib\/hadoop\/lib\/*:\/usr\/lib\/hadoop\/client\/*/" $INSTALL_DIR/accumulo/bin/accumulo
-
+	
+	# Requires comma separated list of URIs for volumes
+	sudo sed -i "/<name>instance\.volumes<\/name>/n;s/<value><\/value>/<value>hdfs:\/\/${MASTER_DNSNAME}:8020\/accumulo<\/value>/" $INSTALL_DIR/accumulo/conf/accumulo-site.xml
+	
 	# Crazy escaping to get this shell to fill in values but root to write out the file
 	ENV_FILE="export ACCUMULO_HOME=$INSTALL_DIR/accumulo; export HADOOP_HOME=/usr/lib/hadoop; export ACCUMULO_LOG_DIR=$INSTALL_DIR/accumulo/logs; export JAVA_HOME=/usr/lib/jvm/java; export ZOOKEEPER_HOME=/usr/lib/zookeeper; export HADOOP_PREFIX=/usr/lib/hadoop; export HADOOP_CONF_DIR=/etc/hadoop/conf"
 	echo $ENV_FILE > /tmp/acc_env
@@ -166,8 +170,10 @@ install_geomesa(){
 	echo " ==== INSTALL GEOMESA ==== "
 	pushd /tmp
 	if [ ! -z "${GEOMESA_DIST_S3}" ]; then
+		echo " ==== FROM S3 ==== "
 		aws s3 cp ${GEOMESA_DIST_S3} . 
 	else 
+		echo " ==== FROM WEB ==== "
 		wget ${GEOMESA_DIST_LT}
 	fi
 
