@@ -12,6 +12,8 @@
 	<packaging>pom</packaging>
     <modules>
         <module>geomesa-dynamodb-datastore</module>
+        <module>geomesa-dynamodb-dist</module>
+        <module>geomesa-dynamodb-gs-plugin</module>
     </modules>
 
 </project>

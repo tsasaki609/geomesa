@@ -24,6 +24,7 @@
         <module>geomesa-blobstore</module>
         <module>geomesa-cassandra</module>
         <module>geomesa-convert</module>
+        <module>geomesa-dynamodb</module>
         <module>geomesa-features</module>
         <module>geomesa-filter</module>
         <module>geomesa-geojson</module>
